@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Каталог товаров{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">Каталог товаров</h1>
+
+    <div class="row">
+        <!-- Блок фильтров -->
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Фильтры</h5>
+                    <form id="filter-form" method="GET" action="{{ url_for('catalog') }}">
+                        <!-- Фильтр по категориям -->
+                        <div class="mb-3">
+                            <h6>Категории</h6>
+                            {% for category in categories %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox"
+                                       name="category[]" id="cat-{{ loop.index }}"
+                                       value="{{ category[0] }}"
+                                       {% if category[0] in request.args.getlist('category[]') %}checked{% endif %}>
+                                <label class="form-check-label" for="cat-{{ loop.index }}">
+                                    {{ category[0] }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Фильтр по цене -->
+                        <div class="mb-3">
+                            <h6>Цена</h6>
+                            <div class="row g-2">
+                                <div class="col">
+                                    <input type="number" class="form-control"
+                                           placeholder="От" name="min_price"
+                                           value="{{ request.args.get('min_price') }}">
+                                </div>
+                                <div class="col">
+                                    <input type="number" class="form-control"
+                                           placeholder="До" name="max_price"
+                                           value="{{ request.args.get('max_price') }}">
+                                </div>
+                            </div>
+                        </div>
+
+                            <!-- Скрытые поля для сохранения других параметров -->
+                            {% if request.args.get('sort') %}
+                            <input type="hidden" name="sort" value="{{ request.args.get('sort') }}">
+                            {% endif %}
+                            {% if request.args.get('search') %}
+                            <input type="hidden" name="search" value="{{ request.args.get('search') }}">
+                            {% endif %}
+
+                        <!-- Кнопки фильтрации -->
+                        <button type="submit" class="btn btn-primary w-100 mb-2">
+                            Применить фильтры
+                        </button>
+                        <a href="{{ url_for('catalog') }}" class="btn btn-outline-secondary w-100">
+                            Сбросить фильтры
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Блок товаров -->
+        <div class="col-md-9">
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <form class="d-flex" method="GET" action="{{ url_for('catalog') }}">
+                        <input class="form-control me-2" type="search"
+                               name="search" placeholder="Поиск товаров..."
+                               value="{{ request.args.get('search', '') }}">
+                        <button class="btn btn-outline-primary" type="submit">
+                            <i class="bi bi-search"></i> Найти
+                        </button>
+                    </form>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <span class="me-2">Сортировка:</span>
+                        <select class="form-select" onchange="window.location.href=this.value">
+                            <option value="{{ url_for('catalog', **request.args) }}"
+                                    {% if not request.args.get('sort') %}selected{% endif %}>
+                                По умолчанию
+                            </option>
+                            <option value="{{ url_for('catalog', **dict(request.args, sort='price_asc')) }}"
+                                    {% if request.args.get('sort') == 'price_asc' %}selected{% endif %}>
+                                По возрастанию цены
+                            </option>
+                            <option value="{{ url_for('catalog', **dict(request.args, sort='price_desc')) }}"
+                                    {% if request.args.get('sort') == 'price_desc' %}selected{% endif %}>
+                                По убыванию цены
+                            </option>
+                            <option value="{{ url_for('catalog', **dict(request.args, sort='newest')) }}"
+                                    {% if request.args.get('sort') == 'newest' %}selected{% endif %}>
+                                Сначала новые
+                            </option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            {% if products %}
+            <div class="row">
+                {% for product in products %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="product-card h-100">
+                        <div class="product-image-container product-card-image-container">
+                            <img src="{{ url_for('static', filename='images/' + product.image_url) }}"
+                                 class="product-image"
+                                 alt="{{ product.name }}"
+                                 loading="lazy">
+                        </div>
+                        <div class="product-card-body">
+                            <h5 class="product-card-title">{{ product.name }}</h5>
+                            <div class="product-card-price">{{ product.price }} руб.</div>
+                            <div class="product-card-buttons">
+                                <a href="{{ url_for('product', id=product.id) }}" class="btn btn-outline-primary">
+                                    Подробнее
+                                </a>
+                                <a href="{{ url_for('add_to_cart', product_id=product.id) }}"
+                                   class="btn btn-primary {% if product.stock <= 0 %}disabled{% endif %}">
+                                    В корзину
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                Товары не найдены. Попробуйте изменить параметры фильтрации.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

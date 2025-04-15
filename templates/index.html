@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Главная страница{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="text-center mb-5">
+        <h1>Добро пожаловать в наш магазин</h1>
+        <p class="lead">Лучшие товары по выгодным ценам</p>
+        <a href="{{ url_for('catalog') }}" class="btn btn-primary btn-lg mt-3">
+            Перейти в каталог
+        </a>
+    </div>
+
+    <h2 class="text-center mb-4">Популярные товары</h2>
+
+    <div class="featured-products">
+        {% for product in featured_products %}
+        <div class="featured-product-card">
+            <div class="featured-product-image-container">
+                <img src="{{ url_for('static', filename='images/' + product.image_url) }}"
+                     class="featured-product-image"
+                     alt="{{ product.name }}"
+                     loading="lazy">
+            </div>
+
+            <div class="featured-product-body">
+                <h5 class="featured-product-title">{{ product.name }}</h5>
+                <div class="featured-product-price">{{ product.price }} руб.</div>
+                <div class="mt-auto">
+                    <a href="{{ url_for('product', id=product.id) }}"
+                       class="btn btn-outline-primary w-100">
+                       Подробнее
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

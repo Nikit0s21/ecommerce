@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Статистика продаж{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">Статистика продаж</h1>
+    
+    <div class="stats-filters mb-4">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label>Период</label>
+                <select class="form-select" name="period">
+                    <option value="day">За день</option>
+                    <option value="week">За неделю</option>
+                    <option value="month" selected>За месяц</option>
+                    <option value="year">За год</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label>Категория</label>
+                <select class="form-select" name="category">
+                    <option value="">Все категории</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat }}">{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 align-self-end">
+                <button type="submit" class="btn btn-primary">Применить</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Продажи по категориям</h5>
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Динамика продаж</h5>
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Детальная статистика</h5>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Категория</th>
+                        <th>Кол-во продаж</th>
+                        <th>Выручка</th>
+                        <th>Доля</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stat in category_stats %}
+                    <tr>
+                        <td>{{ stat.category }}</td>
+                        <td>{{ stat.total_quantity }}</td>
+                        <td>{{ stat.total_revenue }} руб.</td>
+                        <td>{{ (stat.total_revenue / total_revenue * 100)|round(1) }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Инициализация графиков
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(categoryCtx, {
+        type: 'pie',
+        data: {
+            labels: {{ category_labels|safe }},
+            datasets: [{
+                data: {{ category_values|safe }},
+                backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e']
+            }]
+        }
+    });
+
+    const salesCtx = document.getElementById('salesChart').getContext('2d');
+    new Chart(salesCtx, {
+        type: 'line',
+        data: {
+            labels: {{ time_labels|safe }},
+            datasets: [{
+                label: 'Выручка',
+                data: {{ time_values|safe }},
+                borderColor: '#4e73df',
+                tension: 0.1
+            }]
+        }
+    });
+</script>
+{% endblock %}

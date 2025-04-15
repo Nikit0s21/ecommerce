@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="product-main-container">
+        <div class="product-image-container product-main-image-container">
+            <img src="{{ url_for('static', filename='images/' + product.image_url) }}"
+                 class="product-image"
+                 alt="{{ product.name }}"
+                 loading="lazy">
+        </div>
+
+        <div class="product-info">
+            <h1 class="product-main-title">{{ product.name }}</h1>
+            <div class="price">{{ product.price }} ₽</div>
+            <div class="stock {% if product.stock <= 0 %}out-of-stock{% endif %}">
+                {{ 'В наличии (' + product.stock|string + ' шт.)' if product.stock > 0 else 'Нет в наличии' }}
+            </div>
+
+            <div class="product-description mt-4">
+                <h3>Описание</h3>
+                <p>{{ product.description }}</p>
+            </div>
+
+            <div class="product-specs mt-4">
+                <h3>Характеристики</h3>
+                <ul>
+                    <li><strong>Категория:</strong> {{ product.category }}</li>
+                    <li><strong>Артикул:</strong> {{ product.id }}</li>
+                    <li><strong>Дата добавления:</strong> {{ product.created_at.strftime('%d.%m.%Y') }}</li>
+                </ul>
+            </div>
+
+            <div class="product-actions mt-4">
+                <div class="quantity-selector">
+                    <button class="btn btn-outline-secondary quantity-btn minus">-</button>
+                    <input type="number" class="form-control text-center" value="1" min="1" max="{{ product.stock }}">
+                    <button class="btn btn-outline-secondary quantity-btn plus">+</button>
+                </div>
+                <a href="{{ url_for('add_to_cart', product_id=product.id) }}"
+                   class="btn btn-primary btn-lg mt-2 {% if product.stock <= 0 %}disabled{% endif %}">
+                   Добавить в корзину
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// JavaScript для управления количеством
+document.querySelectorAll('.quantity-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const input = this.parentNode.querySelector('input');
+        let value = parseInt(input.value);
+
+        if (this.classList.contains('minus') && value > 1) {
+            input.value = value - 1;
+        } else if (this.classList.contains('plus') && value < parseInt(input.max)) {
+            input.value = value + 1;
+        }
+    });
+});
+</script>
+{% endblock %}

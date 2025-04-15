@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+
+{% block title %}Личный кабинет{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="account-container">
+        <div class="account-sidebar">
+            <div class="user-info">
+                <h3>{{ current_user.first_name }} {{ current_user.last_name }}</h3>
+                <p>{{ current_user.email }}</p>
+                <p>Зарегистрирован: {{ current_user.created_at.strftime('%d.%m.%Y') }}</p>
+            </div>
+
+            <nav class="account-menu">
+                <a href="#profile" class="active"><i class="bi bi-person"></i> Профиль</a>
+                <a href="#orders"><i class="bi bi-bag"></i> Мои заказы</a>
+                <a href="#addresses"><i class="bi bi-geo-alt"></i> Адреса</a>
+                <a href="#stats"><i class="bi bi-graph-up"></i> Статистика</a>
+                <a href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Выйти</a>
+            </nav>
+        </div>
+
+        <div class="account-content">
+            <section id="profile" class="account-section active">
+                <h2>Личные данные</h2>
+                <form id="profile-form" method="POST" action="{{ url_for('update_profile') }}">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Имя</label>
+                            <input type="text" name="first_name" value="{{ current_user.first_name or '' }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Фамилия</label>
+                            <input type="text" name="last_name" value="{{ current_user.last_name or '' }}">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" name="email" value="{{ current_user.email }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Телефон</label>
+                        <input type="tel" name="phone" value="{{ current_user.phone or '' }}">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                </form>
+            </section>
+
+            <section id="orders" class="account-section">
+                <h2>История заказов</h2>
+
+                {% if orders %}
+                <div class="orders-list">
+                    {% for order in orders %}  <!-- Добавлен цикл for -->
+                    <div class="order-card">
+                        <div class="order-header">
+                            <div class="order-id">Заказ #{{ order.id }}</div>
+                            <div class="order-date">{{ order.created_at.strftime('%d.%m.%Y') }}</div>
+                            <div class="order-status">{{ order.status }}</div>
+                            <div class="order-total">{{ order.total }} руб.</div>
+                        </div>
+
+                        <div class="order-details">
+                            <div class="order-items">
+                                {% for item in order.items %}
+                                <div class="order-item">
+                                    <img src="{{ url_for('static', filename='images/' + item.product.image_url) }}"
+                                         alt="{{ item.product.name }}">
+                                    <div class="item-info">
+                                        <h4>{{ item.product.name }}</h4>
+                                        <p>{{ item.quantity }} × {{ item.price }} руб.</p>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="order-actions">
+                                <a href="{{ url_for('repeat_order', order_id=order.id) }}" class="btn btn-outline-primary">
+                                    Повторить заказ
+                                </a>
+                                <a href="{{ url_for('order_details', order_id=order.id) }}" class="btn btn-primary">
+                                    Подробнее
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <p>У вас пока нет заказов</p>
+                    <a href="{{ url_for('catalog') }}" class="btn btn-primary mt-2">
+                        Перейти в каталог
+                    </a>
+                </div>
+                {% endif %}
+            </section>
+
+            <section id="addresses" class="account-section">
+            <h2>Адреса доставки</h2>
+            <div class="addresses-list">
+                {% if current_user.address %}
+                <div class="address-card">
+                    <p>{{ current_user.address }}</p>
+                    <div class="address-actions">
+                        <button class="btn btn-outline-primary edit-address" data-bs-toggle="modal" data-bs-target="#addressModal">
+                            Изменить
+                        </button>
+                    </div>
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    <p>У вас нет сохраненных адресов</p>
+                    <button class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#addressModal">
+                        Добавить адрес
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <section id="stats" class="account-section">
+            <h2>Статистика покупок</h2>
+            {% if order_stats %}
+            <div class="stats-container">
+                <div class="stat-card">
+                    <h3>Всего заказов</h3>
+                    <p class="stat-value">{{ order_stats.total_orders }}</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Общая сумма</h3>
+                    <p class="stat-value">{{ "%.2f"|format(order_stats.total_spent) }} руб.</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Средний чек</h3>
+                    <p class="stat-value">{{ "%.2f"|format(order_stats.avg_order) }} руб.</p>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                Нет данных для отображения статистики
+            </div>
+            {% endif %}
+        </section>
+
+
+
+        <!-- Модальное окно для добавления/изменения адреса -->
+        <div class="modal fade" id="addressModal" tabindex="-1" aria-labelledby="addressModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addressModalLabel">
+                            {% if current_user.address %}Изменить адрес{% else %}Добавить адрес{% endif %}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form method="POST" action="{{ url_for('add_address') }}">
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="addressInput" class="form-label">Адрес доставки</label>
+                                <textarea class="form-control" id="addressInput" name="address" rows="3" required>{{ current_user.address or '' }}</textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                            <button type="submit" class="btn btn-primary">
+                                {% if current_user.address %}Сохранить изменения{% else %}Добавить адрес{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Переключение между разделами
+document.addEventListener('DOMContentLoaded', function() {
+    // Инициализация модального окна Bootstrap
+    var addressModal = new bootstrap.Modal(document.getElementById('addressModal'));
+
+    // Обработчик для кнопки "Изменить"
+    document.querySelectorAll('.edit-address').forEach(btn => {
+        btn.addEventListener('click', function() {
+            addressModal.show();
+        });
+    });
+
+    // Функция для активации вкладки по хэшу
+    function activateTabFromHash() {
+        const hash = window.location.hash;
+        if (hash) {
+            // Удаляем active у всех ссылок и секций
+            document.querySelectorAll('.account-menu a').forEach(a => a.classList.remove('active'));
+            document.querySelectorAll('.account-section').forEach(section => section.classList.remove('active'));
+
+            // Находим соответствующую ссылку и секцию
+            const link = document.querySelector(`.account-menu a[href="${hash}"]`);
+            const section = document.querySelector(hash);
+
+            if (link && section) {
+                link.classList.add('active');
+                section.classList.add('active');
+            }
+        }
+    }
+
+    // Обработчик кликов по меню
+    document.querySelectorAll('.account-menu a').forEach(link => {
+        link.addEventListener('click', function(e) {
+            if (this.getAttribute('href').startsWith('#')) {
+                e.preventDefault();
+                const target = this.getAttribute('href');
+
+                // Изменяем URL без перезагрузки
+                history.pushState(null, null, target);
+
+                // Активируем соответствующую вкладку
+                activateTabFromHash();
+            }
+        });
+    });
+
+    // Активируем вкладку при загрузке страницы
+    activateTabFromHash();
+
+    // Обрабатываем изменение URL (на случай использования кнопок назад/вперед)
+    window.addEventListener('popstate', activateTabFromHash);
+});
+</script>
+{% endblock %}

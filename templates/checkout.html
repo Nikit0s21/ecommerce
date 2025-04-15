@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}Оформление заказа{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="checkout-page">
+        <h1 class="mb-4">Оформление заказа</h1>
+
+        <div class="row">
+            <div class="col-lg-7 mb-4">
+                <div class="card checkout-form-card">
+                    <div class="card-body">
+                        <form id="order-form" method="POST" action="{{ url_for('checkout') }}">
+                            <div class="mb-4">
+                                <h3 class="mb-3"><i class="bi bi-person"></i> Контактная информация</h3>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Имя</label>
+                                        <input type="text" class="form-control" name="first_name"
+                                               value="{{ current_user.first_name or '' }}" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Фамилия</label>
+                                        <input type="text" class="form-control" name="last_name"
+                                               value="{{ current_user.last_name or '' }}" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Email</label>
+                                        <input type="email" class="form-control" name="email"
+                                               value="{{ current_user.email }}" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Телефон</label>
+                                        <input type="tel" class="form-control" name="phone"
+                                               value="{{ current_user.phone or '' }}" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <h3 class="mb-3"><i class="bi bi-truck"></i> Адрес доставки</h3>
+                                <label class="form-label">Полный адрес</label>
+                                <textarea class="form-control" name="address" rows="3" required>{{ current_user.address or '' }}</textarea>
+                            </div>
+
+                            <div class="mb-4">
+                                <h3 class="mb-3"><i class="bi bi-credit-card"></i> Способ оплаты</h3>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="payment_method"
+                                           id="payment-card" value="card" checked>
+                                    <label class="form-check-label" for="payment-card">
+                                        Картой онлайн
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="payment_method"
+                                           id="payment-cash" value="cash">
+                                    <label class="form-check-label" for="payment-cash">
+                                        Наличными при получении
+                                    </label>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-lg w-100">
+                                Подтвердить заказ
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="card order-summary-card">
+                    <div class="card-body">
+                        <h3 class="card-title mb-4">Ваш заказ</h3>
+
+                        <ul class="list-group mb-3">
+                            {% for item in cart_items %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="my-0">{{ item.product.name }}</h6>
+                                    <small class="text-muted">× {{ item.quantity }}</small>
+                                </div>
+                                <span class="text-muted">{{ item.product.price * item.quantity }} руб.</span>
+                            </li>
+                            {% endfor %}
+                            <li class="list-group-item d-flex justify-content-between bg-light">
+                                <span>Итого</span>
+                                <strong>{{ total }} руб.</strong>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
