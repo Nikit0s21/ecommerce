@@ -4,3 +4,4 @@ Flask-SQLAlchemy==3.0.3
 psycopg2-binary==2.9.6
 python-dotenv==1.0.0
 gunicorn==20.1.0
+Werkzeug==2.3.7  # Специфичная версия, совместимая с Flask-Login
